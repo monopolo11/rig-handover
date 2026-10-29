@@ -1,4 +1,5 @@
 import { Hono } from 'hono';
+import { readNight } from './digest/read.js';
 import { loadConfig, type RigConfig } from './config.js';
 import { lane } from './lane.js';
 import { readStatus } from './status.js';
@@ -17,6 +18,13 @@ export function createApp(config: RigConfig = loadConfig()) {
       </Layout>,
     ),
   );
+
+  // The night's NightDigest as JSON, straight from the reader: same rows, same order as the page.
+  app.get('/api/digest/:night', (c) => {
+    const digest = readNight(config.runsDir, c.req.param('night'));
+    if (!digest) return c.json({ error: 'no digest for this night' }, 404);
+    return c.json(digest);
+  });
 
   return app;
 }
